@@ -20,6 +20,7 @@ export enum ModelProviderEnum {
   XAI = 'xAI',
   OpenRouter = 'openrouter',
   Custom = 'custom',
+  EinoAgent = 'eino-agent',
 }
 
 export enum ModelProviderType {

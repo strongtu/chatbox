@@ -100,6 +100,29 @@ export const settingsStore = createStore<Settings & Action>()(
             }
           }
 
+          // Migrate EinoAgent from custom provider to system provider (eino-agent)
+          const EINO_AGENT_CUSTOM_ID = 'custom-provider-eino-agent'
+          const EINO_AGENT_SYSTEM_ID = 'eino-agent'
+          if (settings.defaultChatModel?.provider === EINO_AGENT_CUSTOM_ID) {
+            settings.defaultChatModel = { ...settings.defaultChatModel, provider: EINO_AGENT_SYSTEM_ID }
+          }
+          if (Array.isArray(settings.customProviders)) {
+            settings.customProviders = settings.customProviders.filter(
+              (p: { id: string }) => p.id !== EINO_AGENT_CUSTOM_ID
+            )
+          }
+          if (settings.providers?.[EINO_AGENT_CUSTOM_ID]) {
+            settings.providers = { ...settings.providers }
+            settings.providers[EINO_AGENT_SYSTEM_ID] = settings.providers[EINO_AGENT_CUSTOM_ID]
+            delete settings.providers[EINO_AGENT_CUSTOM_ID]
+          }
+          const migrateProviderRef = (obj: { provider?: string } | undefined) => {
+            if (obj?.provider === EINO_AGENT_CUSTOM_ID) obj.provider = EINO_AGENT_SYSTEM_ID
+          }
+          migrateProviderRef(settings.threadNamingModel)
+          migrateProviderRef(settings.searchTermConstructionModel)
+          migrateProviderRef(settings.ocrModel)
+
           return SettingsSchema.parse(settings)
         },
         skipHydration: true,

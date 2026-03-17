@@ -375,7 +375,7 @@ function ProviderSettings({ providerId }: { providerId: string }) {
               {t('API Key')}
             </Text>
             <Flex gap="xs" align="center">
-              <PasswordInput flex={1} value={providerSettings?.apiKey || ''} onChange={handleApiKeyChange} />
+              <PasswordInput flex={1} value={providerSettings?.apiKey ?? baseInfo?.defaultSettings?.apiKey ?? ''} onChange={handleApiKeyChange} />
               <Tooltip
                 disabled={!!providerSettings?.apiKey && displayModels.length > 0}
                 label={
@@ -403,6 +403,7 @@ function ProviderSettings({ providerId }: { providerId: string }) {
         {[
           ModelProviderEnum.OpenAI,
           ModelProviderEnum.OpenAIResponses,
+          ModelProviderEnum.EinoAgent,
           ModelProviderEnum.Claude,
           ModelProviderEnum.Gemini,
           ModelProviderEnum.Ollama,
@@ -437,7 +438,7 @@ function ProviderSettings({ providerId }: { providerId: string }) {
                     apiHost: providerSettings?.apiHost || baseInfo.defaultSettings?.apiHost,
                   }).apiPath
                 : ''}
-              {baseInfo.id === ModelProviderEnum.OpenAIResponses
+              {[ModelProviderEnum.OpenAIResponses, ModelProviderEnum.EinoAgent].includes(baseInfo.id)
                 ? normalizeOpenAIResponsesHostAndPath({
                     apiHost: providerSettings?.apiHost || baseInfo.defaultSettings?.apiHost,
                     apiPath: providerSettings?.apiPath || baseInfo.defaultSettings?.apiPath,
