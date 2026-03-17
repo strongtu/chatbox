@@ -187,6 +187,11 @@ export async function generate(
           model.isSupportToolUse('read-file'),
           { compactionPoints: session.compactionPoints }
         )
+        // In conversation mode (server manages history), send only the current turn's user message
+        const isConversationMode = 'supportsConversationMode' in model && (model as any).supportsConversationMode
+        const messagesToSend = isConversationMode
+          ? messages.slice(Math.max(0, targetMsgIx - 1), targetMsgIx)
+          : promptMsgs
         const modifyMessageCache: OnResultChangeWithCancel = async (updated) => {
           const textLength = getMessageText(targetMsg, true, true).length
           if (!firstTokenLatency && textLength > 0) {
@@ -208,7 +213,7 @@ export async function generate(
 
         const { result } = await streamText(model, {
           sessionId: session.id,
-          messages: promptMsgs,
+          messages: messagesToSend,
           onResultChangeWithCancel: modifyMessageCache,
           onStatusChange: (status) => {
             targetMsg = {

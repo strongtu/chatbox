@@ -1,6 +1,6 @@
 import { createOpenAI } from '@ai-sdk/openai'
 import { extractReasoningMiddleware, wrapLanguageModel } from 'ai'
-import AbstractAISDKModel from '../../../models/abstract-ai-sdk'
+import AbstractAISDKModel, { type CallSettings } from '../../../models/abstract-ai-sdk'
 import { fetchRemoteModels } from '../../../models/openai-compatible'
 import type { CallChatCompletionOptions } from '../../../models/types'
 import { createFetchWithProxy } from '../../../models/utils/fetch-proxy'
@@ -24,6 +24,8 @@ type FetchFunction = typeof globalThis.fetch
 
 export default class OpenAIResponses extends AbstractAISDKModel {
   public name = 'OpenAI Responses'
+  /** Indicates this model supports server-side conversation history management */
+  public supportsConversationMode = true
 
   constructor(
     public options: Options,
@@ -34,13 +36,20 @@ export default class OpenAIResponses extends AbstractAISDKModel {
     this.options = { ...options, apiHost, apiPath }
   }
 
-  protected getCallSettings() {
-    return {
+  protected getCallSettings(options: CallChatCompletionOptions) {
+    const settings: CallSettings & { stream?: boolean } = {
       temperature: this.options.temperature,
       topP: this.options.topP,
       maxOutputTokens: this.options.maxOutputTokens,
       stream: this.options.stream,
     }
+    // Pass session ID as conversation for Responses API stateful mode
+    if (options.sessionId) {
+      settings.providerOptions = {
+        openai: { conversation: options.sessionId },
+      }
+    }
+    return settings
   }
 
   static isSupportTextEmbedding() {
