@@ -133,7 +133,6 @@ export const settingsStore = createStore<Settings & Action>()(
                 ...settings.providers?.[EINO_AGENT_SYSTEM_ID],
                 apiKey: '123',
                 apiHost: 'http://21.6.137.176:8080',
-                apiPath: '/responses',
                 models: [
                   { modelId: 'master' },
                   { modelId: 'market' },
