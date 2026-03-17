@@ -61,7 +61,7 @@ export const settingsStore = createStore<Settings & Action>()(
           },
           removeItem: async (name) => await storage.removeItem(name),
         })),
-        version: 2,
+        version: 3,
         partialize: (state) => {
           try {
             return SettingsSchema.parse(state)
@@ -88,6 +88,8 @@ export const settingsStore = createStore<Settings & Action>()(
                 settings.licenseActivationMethod = 'manual'
                 settings.memorizedManualLicenseKey = settings.licenseKey
               }
+            case 2:
+            // Initialize EinoAgent as system provider
             default:
               break
           }
@@ -122,6 +124,31 @@ export const settingsStore = createStore<Settings & Action>()(
           migrateProviderRef(settings.threadNamingModel)
           migrateProviderRef(settings.searchTermConstructionModel)
           migrateProviderRef(settings.ocrModel)
+
+          // Initialize EinoAgent default settings if not yet configured
+          if (!settings.providers?.[EINO_AGENT_SYSTEM_ID]?.apiKey) {
+            settings.providers = {
+              ...settings.providers,
+              [EINO_AGENT_SYSTEM_ID]: {
+                ...settings.providers?.[EINO_AGENT_SYSTEM_ID],
+                apiKey: '123',
+                apiHost: 'http://21.6.137.176:8080',
+                apiPath: '/responses',
+                models: [
+                  { modelId: 'master' },
+                  { modelId: 'market' },
+                ],
+              },
+            }
+          }
+
+          // Set EinoAgent master as default chat model if none configured
+          if (!settings.defaultChatModel?.provider) {
+            settings.defaultChatModel = {
+              provider: EINO_AGENT_SYSTEM_ID,
+              model: 'master',
+            }
+          }
 
           return SettingsSchema.parse(settings)
         },
