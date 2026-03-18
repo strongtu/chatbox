@@ -1,8 +1,9 @@
 import NiceModal from '@ebay/nice-modal-react'
-import { Button } from '@mantine/core'
+import { ActionIcon, Button, Tooltip } from '@mantine/core'
+import { IconFolderOpen } from '@tabler/icons-react'
 import type { Message, ModelProvider } from '@shared/types'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { ForwardedRef, useCallback, useEffect, useMemo, useRef } from 'react'
+import { ForwardedRef, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useStore } from 'zustand'
 import MessageList, { type MessageListRef } from '@/components/chat/MessageList'
@@ -10,6 +11,8 @@ import { ErrorBoundary } from '@/components/common/ErrorBoundary'
 import InputBox from '@/components/InputBox/InputBox'
 import Header from '@/components/layout/Header'
 import ThreadHistoryDrawer from '@/components/session/ThreadHistoryDrawer'
+import WorkspacePanel from '@/components/workspace/WorkspacePanel'
+import { useWorkspaceFiles } from '@/hooks/useWorkspaceFiles'
 import { updateSession as updateSessionStore, useSession } from '@/stores/chatStore'
 import { lastUsedModelStore } from '@/stores/lastUsedModelStore'
 import * as scrollActions from '@/stores/scrollActions'
@@ -36,9 +39,52 @@ function RouteComponent() {
 
   const messageListRef = useRef<MessageListRef>(null)
 
+  // Workspace panel state
+  const [workspacePanelOpen, setWorkspacePanelOpen] = useState(true)
+  const [workspacePanelWidth, setWorkspacePanelWidth] = useState(288) // 288px = w-72
+  const [isResizingWorkspace, setIsResizingWorkspace] = useState(false)
+  const wsResizeStartX = useRef<number>(0)
+  const wsResizeStartWidth = useRef<number>(0)
+  const { files: workspaceFiles } = useWorkspaceFiles(currentSessionId)
+
   const goHome = useCallback(() => {
     navigate({ to: '/', replace: true })
   }, [navigate])
+
+  // Workspace panel resize handlers (same pattern as Sidebar)
+  const handleWorkspaceResizeStart = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault()
+      e.stopPropagation()
+      setIsResizingWorkspace(true)
+      wsResizeStartX.current = e.clientX
+      wsResizeStartWidth.current = workspacePanelWidth
+    },
+    [workspacePanelWidth]
+  )
+
+  useEffect(() => {
+    if (!isResizingWorkspace) return
+
+    const handleMouseMove = (e: MouseEvent) => {
+      // Dragging left → larger panel (startX - clientX = positive delta)
+      const deltaX = wsResizeStartX.current - e.clientX
+      const newWidth = Math.max(200, Math.min(600, wsResizeStartWidth.current + deltaX))
+      setWorkspacePanelWidth(newWidth)
+    }
+
+    const handleMouseUp = () => {
+      setIsResizingWorkspace(false)
+    }
+
+    document.addEventListener('mousemove', handleMouseMove)
+    document.addEventListener('mouseup', handleMouseUp)
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [isResizingWorkspace])
 
   useEffect(() => {
     setTimeout(() => {
@@ -151,29 +197,63 @@ function RouteComponent() {
   }, [currentSession?.settings?.provider, currentSession?.settings?.modelId])
 
   return currentSession ? (
-    <div className="flex flex-col h-full">
-      <Header session={currentSession} />
+    <div className="flex h-full">
+      {/* Main chat area */}
+      <div className="flex flex-col h-full flex-1 min-w-0">
+        <Header session={currentSession} />
 
-      {/* MessageList 设置 key，确保每个 session 对应新的 MessageList 实例 */}
-      <MessageList ref={messageListRef} key={`message-list${currentSessionId}`} currentSession={currentSession} />
+        {/* MessageList 设置 key，确保每个 session 对应新的 MessageList 实例 */}
+        <MessageList ref={messageListRef} key={`message-list${currentSessionId}`} currentSession={currentSession} />
 
-      {/* <ScrollButtons /> */}
-      <ErrorBoundary name="session-inputbox">
-        <InputBox
-          key={`input-box${currentSession.id}`}
-          sessionId={currentSession.id}
-          sessionType={currentSession.type}
-          model={model}
-          onStartNewThread={onStartNewThread}
-          onRollbackThread={onRollbackThread}
-          onSelectModel={onSelectModel}
-          onClickSessionSettings={onClickSessionSettings}
-          generating={!!lastGeneratingMessage}
-          onSubmit={onSubmit}
-          onStopGenerating={onStopGenerating}
-        />
-      </ErrorBoundary>
-      <ThreadHistoryDrawer session={currentSession} />
+        {/* <ScrollButtons /> */}
+        <ErrorBoundary name="session-inputbox">
+          <InputBox
+            key={`input-box${currentSession.id}`}
+            sessionId={currentSession.id}
+            sessionType={currentSession.type}
+            model={model}
+            onStartNewThread={onStartNewThread}
+            onRollbackThread={onRollbackThread}
+            onSelectModel={onSelectModel}
+            onClickSessionSettings={onClickSessionSettings}
+            generating={!!lastGeneratingMessage}
+            onSubmit={onSubmit}
+            onStopGenerating={onStopGenerating}
+          />
+        </ErrorBoundary>
+        <ThreadHistoryDrawer session={currentSession} />
+      </div>
+
+      {/* Workspace panel toggle button (floating) */}
+      {!workspacePanelOpen && (
+        <div className="absolute right-3 top-14 z-10">
+          <Tooltip label={t('Workspace Files')} withArrow position="left">
+            <ActionIcon
+              variant="light"
+              size="md"
+              onClick={() => setWorkspacePanelOpen(true)}
+              className="shadow-md"
+            >
+              <IconFolderOpen size={18} />
+            </ActionIcon>
+          </Tooltip>
+        </div>
+      )}
+
+      {/* Right side workspace panel */}
+      {workspacePanelOpen && (
+        <div className="relative h-full shrink-0 border-l border-solid border-chatbox-border-primary" style={{ width: workspacePanelWidth }}>
+          {/* Resize handle */}
+          <div
+            onMouseDown={handleWorkspaceResizeStart}
+            className="absolute top-0 bottom-0 -left-1 w-1 cursor-col-resize z-[1] bg-chatbox-border-primary opacity-0 hover:opacity-70 transition-opacity duration-200"
+          />
+          <WorkspacePanel
+            sessionId={currentSession.id}
+            onClose={() => setWorkspacePanelOpen(false)}
+          />
+        </div>
+      )}
     </div>
   ) : (
     !isFetching && (
