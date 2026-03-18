@@ -1,16 +1,14 @@
 /**
  * eino_agent backend API client for workspace file browsing.
+ * Reads the API base URL from the user's EinoAgent provider settings.
  */
 import type { WorkspaceFileEntry, WorkspaceResponse } from '@shared/types/workspace'
-
-// Default to localhost for development; can be overridden via environment variable.
-const DEAGENT_API_BASE =
-  typeof process !== 'undefined' && process.env.DEAGENT_API_BASE
-    ? process.env.DEAGENT_API_BASE
-    : 'http://localhost:8080'
+import { settingsStore } from '@/stores/settingsStore'
 
 function getBaseUrl(): string {
-  return DEAGENT_API_BASE.replace(/\/+$/, '')
+  const providers = settingsStore.getState().providers
+  const apiHost = providers?.['eino-agent']?.apiHost
+  return (apiHost || '').replace(/\/+$/, '')
 }
 
 /**
