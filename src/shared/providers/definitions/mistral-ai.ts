@@ -3,6 +3,7 @@ import { defineProvider } from '../registry'
 import MistralAI from './models/mistral-ai'
 
 export const mistralAIProvider = defineProvider({
+  hidden: true,
   id: ModelProviderEnum.MistralAI,
   name: 'Mistral AI',
   type: ModelProviderType.OpenAI,

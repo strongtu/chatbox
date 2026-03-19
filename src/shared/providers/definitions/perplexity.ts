@@ -3,6 +3,7 @@ import { defineProvider } from '../registry'
 import Perplexity from './models/perplexity'
 
 export const perplexityProvider = defineProvider({
+  hidden: true,
   id: ModelProviderEnum.Perplexity,
   name: 'Perplexity',
   type: ModelProviderType.OpenAI,

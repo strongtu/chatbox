@@ -48,6 +48,8 @@ export interface ProviderDefinition {
   }
   /** Default settings for the provider */
   defaultSettings?: ProviderSettings
+  /** Whether this provider is hidden from the UI by default */
+  hidden?: boolean
   /**
    * Factory function to create a model instance.
    * This replaces the switch statement in getModel().

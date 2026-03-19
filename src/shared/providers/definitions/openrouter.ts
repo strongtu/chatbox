@@ -3,6 +3,7 @@ import { defineProvider } from '../registry'
 import OpenRouter from './models/openrouter'
 
 export const openRouterProvider = defineProvider({
+  hidden: true,
   id: ModelProviderEnum.OpenRouter,
   name: 'OpenRouter',
   type: ModelProviderType.OpenAI,

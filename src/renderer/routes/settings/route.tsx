@@ -26,11 +26,15 @@ import platform from '@/platform'
 import { featureFlags } from '@/utils/feature-flags'
 
 const ITEMS = [
-  {
-    key: 'chatbox-ai',
-    label: 'Chatbox AI',
-    icon: <IconSparkles className="w-full h-full" />,
-  },
+  ...(featureFlags.chatboxAI
+    ? [
+        {
+          key: 'chatbox-ai',
+          label: 'Chatbox AI',
+          icon: <IconSparkles className="w-full h-full" />,
+        },
+      ]
+    : []),
   {
     key: 'provider',
     label: 'Model Provider',
@@ -41,11 +45,15 @@ const ITEMS = [
     label: 'Default Models',
     icon: <IconBox className="w-full h-full" />,
   },
-  {
-    key: 'web-search',
-    label: 'Web Search',
-    icon: <IconWorldWww className="w-full h-full" />,
-  },
+  ...(featureFlags.webSearch
+    ? [
+        {
+          key: 'web-search',
+          label: 'Web Search',
+          icon: <IconWorldWww className="w-full h-full" />,
+        },
+      ]
+    : []),
   ...(featureFlags.mcp
     ? [
         {
@@ -64,11 +72,15 @@ const ITEMS = [
         },
       ]
     : []),
-  {
-    key: 'document-parser',
-    label: 'Document Parser',
-    icon: <IconFileText className="w-full h-full" />,
-  },
+  ...(featureFlags.documentParser
+    ? [
+        {
+          key: 'document-parser',
+          label: 'Document Parser',
+          icon: <IconFileText className="w-full h-full" />,
+        },
+      ]
+    : []),
   {
     key: 'chat',
     label: 'Chat Settings',

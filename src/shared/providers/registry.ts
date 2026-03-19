@@ -35,5 +35,6 @@ export function getSystemProviders(): BuiltinProviderBaseInfo[] {
     description: def.description,
     urls: def.urls,
     defaultSettings: def.defaultSettings,
+    hidden: def.hidden,
   }))
 }

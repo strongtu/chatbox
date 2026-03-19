@@ -3,6 +3,7 @@ import { defineProvider } from '../registry'
 import VolcEngine from './models/volcengine'
 
 export const volcEngineProvider = defineProvider({
+  hidden: true,
   id: ModelProviderEnum.VolcEngine,
   name: 'VolcEngine',
   type: ModelProviderType.OpenAI,

@@ -3,6 +3,7 @@ import { defineProvider } from '../registry'
 import XAI from './models/xai'
 
 export const xaiProvider = defineProvider({
+  hidden: true,
   id: ModelProviderEnum.XAI,
   name: 'xAI',
   type: ModelProviderType.OpenAI,

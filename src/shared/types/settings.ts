@@ -75,6 +75,7 @@ const BuiltinProviderBaseInfoSchema = z.object({
     .optional()
     .catch(undefined),
   defaultSettings: ProviderSettingsSchema.optional().catch(undefined),
+  hidden: z.boolean().optional().catch(undefined),
 })
 
 const CustomProviderBaseInfoSchema = BuiltinProviderBaseInfoSchema.extend({

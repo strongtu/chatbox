@@ -3,6 +3,7 @@ import { defineProvider } from '../registry'
 import DeepSeek from './models/deepseek'
 
 export const deepseekProvider = defineProvider({
+  hidden: true,
   id: ModelProviderEnum.DeepSeek,
   name: 'DeepSeek',
   type: ModelProviderType.OpenAI,

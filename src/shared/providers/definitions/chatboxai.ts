@@ -3,6 +3,7 @@ import { defineProvider } from '../registry'
 import ChatboxAI from './models/chatboxai'
 
 export const chatboxAIProvider = defineProvider({
+  hidden: true,
   id: ModelProviderEnum.ChatboxAI,
   name: 'Chatbox AI',
   type: ModelProviderType.ChatboxAI,

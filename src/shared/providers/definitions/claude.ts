@@ -3,6 +3,7 @@ import { defineProvider } from '../registry'
 import Claude from './models/claude'
 
 export const claudeProvider = defineProvider({
+  hidden: true,
   id: ModelProviderEnum.Claude,
   name: 'Claude',
   type: ModelProviderType.Claude,

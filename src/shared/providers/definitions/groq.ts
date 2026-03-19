@@ -3,6 +3,7 @@ import { defineProvider } from '../registry'
 import Groq from './models/groq'
 
 export const groqProvider = defineProvider({
+  hidden: true,
   id: ModelProviderEnum.Groq,
   name: 'Groq',
   type: ModelProviderType.OpenAI,

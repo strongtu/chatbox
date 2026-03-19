@@ -41,7 +41,7 @@ export function RouteComponent() {
       [
         ...SystemProviders().filter(
           (p) =>
-            p.id !== 'chatbox-ai' && // Chatbox AI is now a top-level menu item
+            !p.hidden &&
             !(isExceeded && p.name.toLocaleLowerCase().match(/openai|claude|gemini/i))
         ),
         ...(customProviders || []),

@@ -3,6 +3,7 @@ import { defineProvider } from '../registry'
 import ChatGLM from './models/chatglm'
 
 export const chatGLMProvider = defineProvider({
+  hidden: true,
   id: ModelProviderEnum.ChatGLM6B,
   name: 'ChatGLM6B',
   type: ModelProviderType.OpenAI,

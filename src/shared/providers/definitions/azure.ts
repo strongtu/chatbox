@@ -3,6 +3,7 @@ import { defineProvider } from '../registry'
 import AzureOpenAI from './models/azure'
 
 export const azureProvider = defineProvider({
+  hidden: true,
   id: ModelProviderEnum.Azure,
   name: 'Azure OpenAI',
   type: ModelProviderType.OpenAI,

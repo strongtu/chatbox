@@ -3,6 +3,7 @@ import { defineProvider } from '../registry'
 import Gemini from './models/gemini'
 
 export const geminiProvider = defineProvider({
+  hidden: true,
   id: ModelProviderEnum.Gemini,
   name: 'Gemini',
   type: ModelProviderType.Gemini,

@@ -3,6 +3,7 @@ import { defineProvider } from '../registry'
 import SiliconFlow from './models/siliconflow'
 
 export const siliconFlowProvider = defineProvider({
+  hidden: true,
   id: ModelProviderEnum.SiliconFlow,
   name: 'SiliconFlow',
   type: ModelProviderType.OpenAI,
