@@ -157,7 +157,7 @@ export function ShortcutConfig(props: {
     },
     {
       label: t('Navigate to the Specific Conversation'),
-      // name: 'sessionListNavTargetIndex',
+      name: 'sessionListNavTargetIndex',
       keys: 'mod+1-9',
     },
     {
@@ -172,17 +172,17 @@ export function ShortcutConfig(props: {
     },
     {
       label: t('Navigate to the Previous Option (in search dialog)'),
-      // name: 'optionNavUp',
+      name: 'optionNavUp',
       keys: shortcuts.optionNavUp,
     },
     {
       label: t('Navigate to the Next Option (in search dialog)'),
-      // name: 'optionNavDown',
+      name: 'optionNavDown',
       keys: shortcuts.optionNavDown,
     },
     {
       label: t('Select the Current Option (in search dialog)'),
-      // name: 'optionSelect',
+      name: 'optionSelect',
       keys: shortcuts.optionSelect,
     },
   ]
