@@ -18,6 +18,7 @@ import { ScalableIcon } from './components/common/ScalableIcon'
 import ThemeSwitchButton from './components/dev/ThemeSwitchButton'
 import SessionList from './components/session/SessionList'
 import { FORCE_ENABLE_DEV_PAGES } from './dev/devToolsConfig'
+import { featureFlags } from './utils/feature-flags'
 import useNeedRoomForMacWinControls from './hooks/useNeedRoomForWinControls'
 import { useIsSmallScreen, useSidebarWidth } from './hooks/useScreenChange'
 import useVersion from './hooks/useVersion'
@@ -167,27 +168,31 @@ export default function Sidebar() {
               <ScalableIcon icon={IconCirclePlus} className="mr-2" />
               {t('New Chat')}
             </Button>
-            <Button variant="light" fullWidth onClick={handleCreateNewPictureSession}>
-              <ScalableIcon icon={IconPhotoPlus} className="mr-2" />
-              {t('Create Image')}
-            </Button>
+            {featureFlags.createImage && (
+              <Button variant="light" fullWidth onClick={handleCreateNewPictureSession}>
+                <ScalableIcon icon={IconPhotoPlus} className="mr-2" />
+                {t('Create Image')}
+              </Button>
+            )}
           </Stack>
-          <NavLink
-            c="chatbox-secondary"
-            className="rounded"
-            label={t('My Copilots')}
-            leftSection={<ScalableIcon icon={IconMessageChatbot} size={20} />}
-            onClick={() => {
-              navigate({
-                to: '/copilots',
-              })
-              if (isSmallScreen) {
-                setShowSidebar(false)
-              }
-            }}
-            variant="light"
-            p="xs"
-          />
+          {featureFlags.copilots && (
+            <NavLink
+              c="chatbox-secondary"
+              className="rounded"
+              label={t('My Copilots')}
+              leftSection={<ScalableIcon icon={IconMessageChatbot} size={20} />}
+              onClick={() => {
+                navigate({
+                  to: '/copilots',
+                })
+                if (isSmallScreen) {
+                  setShowSidebar(false)
+                }
+              }}
+              variant="light"
+              p="xs"
+            />
+          )}
           <NavLink
             c="chatbox-secondary"
             className="rounded"
