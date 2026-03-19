@@ -7,6 +7,7 @@ import { getSessionMeta } from '@/stores/sessionHelpers'
 
 export async function initData() {
   // 不初始化预设session
+  return;
   await initSessionsIfNeeded()
 }
 
