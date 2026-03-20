@@ -1,6 +1,6 @@
 import { ActionIcon, Loader, ScrollArea, Text, Tooltip } from '@mantine/core'
 import { IconChevronDown, IconChevronRight, IconFolder, IconFolderOpen, IconRefresh, IconStar, IconX } from '@tabler/icons-react'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import FileIcon from '@/components/FileIcon'
 import { useWorkspaceFiles, buildFileTree } from '@/hooks/useWorkspaceFiles'
@@ -17,6 +17,11 @@ export default function WorkspacePanel({ sessionId, onClose }: WorkspacePanelPro
   const { files, isLoading, refresh } = useWorkspaceFiles(sessionId)
   const [selectedFile, setSelectedFile] = useState<FileTreeNode | null>(null)
 
+  // Vertical split: treeRatio is the fraction (0–1) of the content area given to the file tree
+  const [treeRatio, setTreeRatio] = useState(0.5)
+  const [isResizingSplit, setIsResizingSplit] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+
   const tree = useMemo(() => buildFileTree(files), [files])
 
   const handleFileClick = useCallback((node: FileTreeNode) => {
@@ -24,6 +29,37 @@ export default function WorkspacePanel({ sessionId, onClose }: WorkspacePanelPro
       setSelectedFile(node)
     }
   }, [])
+
+  // --- Vertical splitter drag logic ---
+  const handleSplitMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
+    setIsResizingSplit(true)
+  }, [])
+
+  useEffect(() => {
+    if (!isResizingSplit) return
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!containerRef.current) return
+      const rect = containerRef.current.getBoundingClientRect()
+      const y = e.clientY - rect.top
+      const ratio = Math.max(0.15, Math.min(0.85, y / rect.height))
+      setTreeRatio(ratio)
+    }
+
+    const handleMouseUp = () => {
+      setIsResizingSplit(false)
+    }
+
+    document.addEventListener('mousemove', handleMouseMove)
+    document.addEventListener('mouseup', handleMouseUp)
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [isResizingSplit])
+
+  const showPreview = !!selectedFile
 
   return (
     <div className="flex flex-col h-full border-l border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
@@ -46,35 +82,61 @@ export default function WorkspacePanel({ sessionId, onClose }: WorkspacePanelPro
         </div>
       </div>
 
-      {/* File tree */}
-      <ScrollArea className="flex-1" type="auto">
-        {isLoading && files.length === 0 ? (
-          <div className="flex items-center justify-center py-8">
-            <Loader size="sm" />
-          </div>
-        ) : tree.length === 0 ? (
-          <div className="flex items-center justify-center py-8">
-            <Text size="xs" c="dimmed">{t('No files yet')}</Text>
-          </div>
-        ) : (
-          <div className="py-1">
-            {tree.map((node) => (
-              <TreeNode key={node.path} node={node} depth={0} onFileClick={handleFileClick} selectedPath={selectedFile?.path} />
-            ))}
-          </div>
-        )}
-      </ScrollArea>
+      {/* Content area: file tree + optional resizable preview */}
+      <div
+        ref={containerRef}
+        className="flex flex-col flex-1 min-h-0 relative"
+        style={isResizingSplit ? { userSelect: 'none' } : undefined}
+      >
+        {/* File tree */}
+        <ScrollArea
+          className="min-h-0"
+          type="auto"
+          style={showPreview ? { height: `${treeRatio * 100}%` } : { flex: 1 }}
+        >
+          {isLoading && files.length === 0 ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader size="sm" />
+            </div>
+          ) : tree.length === 0 ? (
+            <div className="flex items-center justify-center py-8">
+              <Text size="xs" c="dimmed">{t('No files yet')}</Text>
+            </div>
+          ) : (
+            <div className="py-1">
+              {tree.map((node) => (
+                <TreeNode key={node.path} node={node} depth={0} onFileClick={handleFileClick} selectedPath={selectedFile?.path} />
+              ))}
+            </div>
+          )}
+        </ScrollArea>
 
-      {/* File preview */}
-      {selectedFile && (
-        <div className="border-t border-gray-200 dark:border-gray-700 flex-1 min-h-0 max-h-[50%]">
-          <FilePreview
-            sessionId={sessionId}
-            file={selectedFile}
-            onClose={() => setSelectedFile(null)}
-          />
-        </div>
-      )}
+        {/* Resizable splitter + File preview */}
+        {showPreview && (
+          <>
+            {/* Drag handle */}
+            <div
+              onMouseDown={handleSplitMouseDown}
+              className="h-1 cursor-row-resize relative z-[1] shrink-0 group"
+            >
+              <div className="absolute inset-x-0 -top-1 -bottom-1" />
+              <div className="h-full bg-gray-200 dark:bg-gray-700 group-hover:bg-blue-400 dark:group-hover:bg-blue-500 transition-colors duration-150" />
+            </div>
+
+            {/* File preview */}
+            <div
+              className="min-h-0 flex flex-col"
+              style={{ height: `${(1 - treeRatio) * 100}%` }}
+            >
+              <FilePreview
+                sessionId={sessionId}
+                file={selectedFile}
+                onClose={() => setSelectedFile(null)}
+              />
+            </div>
+          </>
+        )}
+      </div>
     </div>
   )
 }
