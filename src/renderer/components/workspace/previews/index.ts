@@ -1,0 +1,6 @@
+export { detectFileType } from './fileTypes'
+export type { FilePreviewType } from './fileTypes'
+export { default as ImagePreview } from './ImagePreview'
+export { default as PdfPreview } from './PdfPreview'
+export { default as TextPreview } from './TextPreview'
+export { default as UnknownPreview } from './UnknownPreview'

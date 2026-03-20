@@ -1,10 +1,15 @@
-import { ActionIcon, Loader, ScrollArea, Text, Tooltip } from '@mantine/core'
+import { ActionIcon, ScrollArea, Text, Tooltip } from '@mantine/core'
 import { IconDownload, IconX } from '@tabler/icons-react'
-import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { fetchFileContent, getFileUrl } from '@/packages/deagent-api'
-import Markdown from '@/components/Markdown'
+import { getFileUrl } from '@/packages/deagent-api'
 import type { FileTreeNode } from '@shared/types/workspace'
+import {
+  detectFileType,
+  ImagePreview,
+  PdfPreview,
+  TextPreview,
+  UnknownPreview,
+} from './previews'
 
 interface FilePreviewProps {
   sessionId: string
@@ -12,38 +17,13 @@ interface FilePreviewProps {
   onClose: () => void
 }
 
-// File extensions that can be previewed as text/code
-const TEXT_EXTENSIONS = new Set([
-  'txt', 'md', 'py', 'go', 'js', 'jsx', 'ts', 'tsx', 'json', 'yaml', 'yml',
-  'toml', 'xml', 'html', 'htm', 'css', 'scss', 'less', 'sql', 'sh', 'bash',
-  'bat', 'cmd', 'ps1', 'rb', 'java', 'c', 'cpp', 'h', 'hpp', 'cs', 'rs',
-  'swift', 'kt', 'php', 'r', 'lua', 'pl', 'csv', 'log', 'ini', 'cfg',
-  'conf', 'env', 'gitignore', 'dockerfile', 'makefile',
-])
-
-const IMAGE_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp', 'bmp', 'ico'])
-
-function getExtension(name: string): string {
-  const parts = name.toLowerCase().split('.')
-  return parts.length > 1 ? parts[parts.length - 1] : ''
-}
-
 export default function FilePreview({ sessionId, file, onClose }: FilePreviewProps) {
   const { t } = useTranslation()
-  const ext = getExtension(file.name)
   const fileUrl = getFileUrl(sessionId, file.path)
+  const fileType = detectFileType(file.name)
 
-  const isImage = IMAGE_EXTENSIONS.has(ext)
-  const isText = TEXT_EXTENSIONS.has(ext) || file.name.toLowerCase() === 'makefile' || file.name.toLowerCase() === 'dockerfile'
-  const isMarkdown = ext === 'md'
-
-  // Fetch text content for text-based files
-  const { data: textContent, isLoading: isLoadingText } = useQuery({
-    queryKey: ['file-content', sessionId, file.path],
-    queryFn: () => fetchFileContent(sessionId, file.path),
-    enabled: isText && !isImage,
-    staleTime: 30_000,
-  })
+  // PDF and images manage their own scrolling / sizing — no ScrollArea wrapper
+  const needsScrollArea = fileType !== 'pdf' && fileType !== 'image'
 
   return (
     <div className="flex flex-col h-full">
@@ -74,44 +54,54 @@ export default function FilePreview({ sessionId, file, onClose }: FilePreviewPro
       </div>
 
       {/* Content area */}
-      <ScrollArea className="flex-1" type="auto">
-        {isImage ? (
-          <div className="p-2 flex items-center justify-center">
-            <img
-              src={fileUrl}
-              alt={file.name}
-              className="max-w-full max-h-[300px] object-contain rounded"
-            />
-          </div>
-        ) : isText ? (
-          isLoadingText ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader size="sm" />
-            </div>
-          ) : isMarkdown ? (
-            <div className="p-3 prose prose-sm dark:prose-invert max-w-none">
-              <Markdown>{textContent || ''}</Markdown>
-            </div>
-          ) : (
-            <div className="p-2">
-              <pre className="text-xs font-mono whitespace-pre-wrap break-all text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-800 rounded p-2 overflow-auto">
-                {textContent || ''}
-              </pre>
-            </div>
-          )
-        ) : (
-          <div className="flex flex-col items-center justify-center py-8 gap-2">
-            <Text size="sm" c="dimmed">{t('Preview not available')}</Text>
-            <a
-              href={fileUrl}
-              download={file.name}
-              className="text-sm text-blue-500 hover:text-blue-600 underline"
-            >
-              {t('Download')}
-            </a>
-          </div>
-        )}
-      </ScrollArea>
+      {needsScrollArea ? (
+        <ScrollArea className="flex-1" type="auto">
+          <PreviewContent
+            fileType={fileType}
+            fileUrl={fileUrl}
+            file={file}
+            sessionId={sessionId}
+          />
+        </ScrollArea>
+      ) : (
+        <div className="flex-1 min-h-0">
+          <PreviewContent
+            fileType={fileType}
+            fileUrl={fileUrl}
+            file={file}
+            sessionId={sessionId}
+          />
+        </div>
+      )}
     </div>
   )
+}
+
+/**
+ * PreviewContent dispatches to the appropriate renderer based on file type.
+ */
+function PreviewContent({
+  fileType,
+  fileUrl,
+  file,
+  sessionId,
+}: {
+  fileType: ReturnType<typeof detectFileType>
+  fileUrl: string
+  file: FileTreeNode
+  sessionId: string
+}) {
+  switch (fileType) {
+    case 'image':
+      return <ImagePreview fileUrl={fileUrl} file={file} />
+    case 'pdf':
+      return <PdfPreview fileUrl={fileUrl} />
+    case 'markdown':
+      return <TextPreview sessionId={sessionId} filePath={file.path} isMarkdown />
+    case 'text':
+      return <TextPreview sessionId={sessionId} filePath={file.path} isMarkdown={false} />
+    case 'unknown':
+    default:
+      return <UnknownPreview fileUrl={fileUrl} fileName={file.name} />
+  }
 }
