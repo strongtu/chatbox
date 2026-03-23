@@ -26,6 +26,9 @@ export const StorageKeyGenerator = {
   file(sessionId: string, msgId: string) {
     return `file:${sessionId}:${msgId}:${uuidv4()}`
   },
+  linkUniqKey(url: string) {
+    return `link:${url}`
+  },
 }
 
 export default class StoreStorage extends BaseStorage {
